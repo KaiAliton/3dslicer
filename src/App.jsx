@@ -6,7 +6,7 @@ import PrintForm from "./components/PrintForm";
 
 export default function Home() {
   return (
-    <div className="text-white bg-black">
+    <div className="container mx-auto ">
       <Header />
       <Main />
       <Footer />

@@ -13,10 +13,10 @@ export default function ImageWithBenefits({ imageURL, benefits }) {
                     {benefits.map((item, index) => (
                         <div className="flex flex-col mb-10 lg:items-start items-center" key={index}>
                             <div className="flex-grow">
-                                <h2 className="text-white text-2xl title-font font-medium mb-3">
+                                <h2 className="text-base-content text-3xl title-font font-medium mb-3">
                                     {item.title}
                                 </h2>
-                                <p className="leading-relaxed text-lg">
+                                <p className="leading-relaxed text-2xl">
                                     {item.description}
                                 </p>
                             </div>

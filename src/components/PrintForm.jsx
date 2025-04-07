@@ -151,7 +151,7 @@ const CanvasViewer = ({ file }) => {
       <div ref={containerRef} className="w-full h-full" />
 
       {dimensions && (
-        <div className="absolute bottom-4 left-4  p-4 rounded-lg shadow-md text-primary">
+        <div className="absolute bg-base-100 bottom-4 left-4  p-4 rounded-lg shadow-md text-base-content">
           <h3 className="font-bold mb-2">Model Dimensions (mm)</h3>
           <div className="grid grid-cols-2 gap-2">
             <span>Width (X):</span>
@@ -175,16 +175,16 @@ const PrintForm = () => {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [taskId, setTaskId] = useState(null);
-  const [taskStatus, setTaskStatus] = useState('pending');
+  const [taskStatus, setTaskStatus] = useState('IDLE');
 
   useEffect(() => {
     if (!taskId) return;
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`https://78.81.146.106:5665/task/${taskId}`);
+        const response = await fetch(`https://localhost:5665/task/${taskId}`);
         const data = await response.json();
-        setTaskStatus(data.status);
+
 
         if (data.status === 'success') {
           clearInterval(interval);
@@ -210,13 +210,12 @@ const PrintForm = () => {
       return;
     }
 
-    
     const isValidExtension = selectedFile.name.toLowerCase().endsWith('.stl');
     const isValidSize = selectedFile.size <= 10 * 1024 * 1024;
 
     if (!isValidExtension) {
       setError('Invalid file type. Please upload a .stl file');
-      e.target.value = ''; 
+      e.target.value = '';
       setFile(null);
       return;
     }
@@ -254,10 +253,10 @@ const PrintForm = () => {
 
     setIsSubmitting(true);
     setError('');
-
+    setTaskStatus('PENDING');
 
     try {
-      const response = await fetch('https://78.81.146.106:5665/calculate', {
+      const response = await fetch('https://localhost:5665/calculate', {
         method: 'POST',
         body: formData,
       });
@@ -275,12 +274,14 @@ const PrintForm = () => {
     <div className="">
       {!results ? (
         <dialog id="my_modal_1" className="modal">
-          <div className="max-w-md mx-auto p-8">
-            <form onSubmit={handleSubmit} className=" bg-black p-6 rounded-lg shadow-md">
-              <h1 className="text-2xl font-bold mb-6 ">3D Print Calculator</h1>
-
+          <div className="max-w-md mx-auto p-8 text-base-content relative">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn btn-ghost btn-md btn-circle absolute right-8">✕</button>
+            </form>
+            <form onSubmit={handleSubmit} className=" bg-base-100 p-6 rounded-lg shadow-md">
+              <h1 className="text-2xl font-bold mb-6">3D Print Calculator</h1>
               {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-
               <div className="mb-4">
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend">Pick a file</legend>
@@ -293,10 +294,7 @@ const PrintForm = () => {
                   />
                   <label className="fieldset-label">Max size 10MB</label>
                 </fieldset>
-
               </div>
-
-
               <div className="mb-4">
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend">Select material</legend>
@@ -310,7 +308,6 @@ const PrintForm = () => {
                   </select>
                 </fieldset>
               </div>
-
               <div className="mb-6">
                 <fieldset className="fieldset">
                   <legend className="fieldset-legend">Infill (%)</legend>
@@ -325,11 +322,10 @@ const PrintForm = () => {
                   />
                 </fieldset>
               </div>
-
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full btn  text-white py-2 px-4 rounded-md  disabled:bg-gray-400"
+                className="w-full btn py-2 px-4 rounded-md  disabled:bg-gray-400"
               >
                 {taskStatus === 'PENDING' ? 'Calculating...' : 'Calculate'}
               </button>
@@ -338,30 +334,30 @@ const PrintForm = () => {
         </dialog>
       ) : (
         <dialog id="my_modal_1" className="modal">
-          <div className="modal-box w-11/12 max-w-5xl h-2/3">
-            <div className="flex w-full h-full ">
-              <div className="flex-1 relative w-full">
+          <div className="modal-box w-11/12 max-w-5xl md:h-2/3 ">
+            <div className="flex flex-col relative w-full h-full ">
+              <div className="relative w-full h-full">
                 <CanvasViewer file={file} />
               </div>
+              <form method="dialog">
+                {/* if there is a button in form, it will close the modal */}
+                <button className="btn btn-lg btn-circle absolute right-2 top-2">✕</button>
+              </form>
+              <div className="md:absolute md:max-w-64 bg-base-100 left-4 top-4 p-4 shadow-md text-base-content">
 
-              <div className="w-80  p-6 border-l shadow-lg">
-                <form method="dialog">
-                  {/* if there is a button in form, it will close the modal */}
-                  <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                </form>
                 <h2 className="text-xl font-bold mb-4">Print Details</h2>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span className="">Print Time</span>
-                    <span className="font-medium">{results.print_time}</span>
+                    <span className="">Print Time </span>
+                    <span className="font-medium"> {results.print_time}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="">Material Used</span>
-                    <span className="font-medium">{results.material_grams}g</span>
+                    <span className="">Material Used </span>
+                    <span className="font-medium"> {results.material_grams}g</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="">Total Cost</span>
-                    <span className="font-medium">{results.cost} rub.</span>
+                    <span className="">Total Cost </span>
+                    <span className="font-medium"> {results.cost} rub.</span>
                   </div>
                 </div>
                 <button
