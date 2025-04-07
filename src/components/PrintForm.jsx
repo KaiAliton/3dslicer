@@ -182,7 +182,7 @@ const PrintForm = () => {
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`https://78.81.146.106:5665/task/${taskId}`);
+        const response = await fetch(`http://78.81.146.106:5665/task/${taskId}`);
         const data = await response.json();
 
 
@@ -256,7 +256,7 @@ const PrintForm = () => {
     setTaskStatus('PENDING');
 
     try {
-      const response = await fetch('https://78.81.146.106:5665/calculate', {
+      const response = await fetch('http://78.81.146.106:5665/calculate', {
         method: 'POST',
         body: formData,
       });
