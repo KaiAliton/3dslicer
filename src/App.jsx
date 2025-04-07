@@ -1,7 +1,7 @@
 
-import Header from "./components/Header";
+import Header from "./components/common/Header/Header";
 import Main from "./components/Main";
-import Footer from "./components/Footer";
+import Footer from "./components/common/Footer/Footer";
 import PrintForm from "./components/PrintForm";
 
 export default function Home() {

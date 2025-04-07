@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { calculatePrint } from '../utils/api';
 
 const CanvasViewer = ({ file }) => {
   const containerRef = useRef(null);
@@ -11,6 +12,7 @@ const CanvasViewer = ({ file }) => {
   const controls = useRef(null);
   const mesh = useRef(null);
   const [dimensions, setDimensions] = useState(null);
+
 
   useEffect(() => {
     const currentContainer = containerRef.current;
@@ -173,6 +175,34 @@ const PrintForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const [taskId, setTaskId] = useState(null);
+  const [taskStatus, setTaskStatus] = useState('pending');
+
+  useEffect(() => {
+    if (!taskId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`http://78.81.146.106:5665/task/${taskId}`);
+        const data = await response.json();
+        setTaskStatus(data.status);
+
+        if (data.status === 'success') {
+          clearInterval(interval);
+          setResults(data.result);
+        }
+        if (data.status === 'failure') {
+          clearInterval(interval);
+          setError('Calculation failed');
+        }
+      } catch (err) {
+        clearInterval(interval);
+        setError('Connection error');
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [taskId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -189,19 +219,15 @@ const PrintForm = () => {
     setIsSubmitting(true);
     setError('');
 
+
     try {
-      const response = await fetch('http://78.81.146.106/calculate', {
+      const response = await fetch('http://78.81.146.106:5665/calculate', {
         method: 'POST',
         body: formData,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.errors?.join(', ') || 'Request failed');
-      }
-
-      const data = await response.json();
-      setResults(data);
+      const { task_id } = await response.json();
+      setTaskId(task_id);
+      setTaskStatus('PENDING');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -229,7 +255,7 @@ const PrintForm = () => {
                     className="file-input"
                     required
                   />
-                  <label className="fieldset-label">Max size 2MB</label>
+                  <label className="fieldset-label">Max size 10MB</label>
                 </fieldset>
 
               </div>
@@ -250,17 +276,17 @@ const PrintForm = () => {
               </div>
 
               <div className="mb-6">
-              <fieldset className="fieldset">
+                <fieldset className="fieldset">
                   <legend className="fieldset-legend">Infill (%)</legend>
                   <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={infill}
-                  onChange={(e) => setInfill(e.target.value)}
-                  className="input"
-                  required
-                />
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={infill}
+                    onChange={(e) => setInfill(e.target.value)}
+                    className="input"
+                    required
+                  />
                 </fieldset>
               </div>
 
@@ -269,7 +295,7 @@ const PrintForm = () => {
                 disabled={isSubmitting}
                 className="w-full btn  text-white py-2 px-4 rounded-md  disabled:bg-gray-400"
               >
-                {isSubmitting ? 'Calculating...' : 'Calculate'}
+                {taskStatus === 'PENDING' ? 'Calculating...' : 'Calculate'}
               </button>
             </form>
           </div>
