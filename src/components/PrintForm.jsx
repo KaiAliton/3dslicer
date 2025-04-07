@@ -183,7 +183,7 @@ const PrintForm = () => {
 
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`http://78.81.146.106:5665/task/${taskId}`);
+        const response = await fetch(`https://78.81.146.106:5665/task/${taskId}`);
         const data = await response.json();
         setTaskStatus(data.status);
 
@@ -204,10 +204,47 @@ const PrintForm = () => {
     return () => clearInterval(interval);
   }, [taskId]);
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    
+    const isValidExtension = selectedFile.name.toLowerCase().endsWith('.stl');
+    const isValidSize = selectedFile.size <= 10 * 1024 * 1024;
+
+    if (!isValidExtension) {
+      setError('Invalid file type. Please upload a .stl file');
+      e.target.value = ''; 
+      setFile(null);
+      return;
+    }
+
+    if (!isValidSize) {
+      setError('File size exceeds 10MB limit');
+      e.target.value = '';
+      setFile(null);
+      return;
+    }
+
+    setError('');
+    setFile(selectedFile);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
       setError('Please select a model file');
+      return;
+    }
+    const isValidExtension = file.name.toLowerCase().endsWith('.stl');
+    const isValidSize = file.size <= 10 * 1024 * 1024;
+
+    if (!isValidExtension || !isValidSize) {
+      setError('Invalid file. Please select a valid .stl file under 10MB.');
+      setFile(null);
       return;
     }
 
@@ -221,7 +258,7 @@ const PrintForm = () => {
 
 
     try {
-      const response = await fetch('http://78.81.146.106:5665/calculate', {
+      const response = await fetch('https://78.81.146.106:5665/calculate', {
         method: 'POST',
         body: formData,
       });
@@ -251,7 +288,7 @@ const PrintForm = () => {
                   <input
                     type="file"
                     accept=".stl"
-                    onChange={(e) => setFile(e.target.files[0])}
+                    onChange={handleFileChange}
                     className="file-input"
                     required
                   />
