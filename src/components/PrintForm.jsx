@@ -336,7 +336,7 @@ const PrintForm = () => {
         <dialog id="my_modal_1" className="modal">
           <div className="modal-box w-11/12 max-w-5xl md:h-2/3 ">
             <div className="flex flex-col relative w-full h-full ">
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full hidden md:block">
                 <CanvasViewer file={file} />
               </div>
               <form method="dialog">

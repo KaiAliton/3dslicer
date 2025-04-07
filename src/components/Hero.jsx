@@ -1,8 +1,8 @@
 export default function Hero({ title, description, imageURL }) {
     return (
         <>
-            <div className=" px-5 pt-32 mx-auto lg:px-4 lg:py-4">
-                <div className="flex flex-col w-full mb-2 text-left md:text-center ">
+            <div className=" px-5 lg:pt-12 mx-auto lg:px-4 lg:py-4">
+                <div className="flex flex-col w-full mb-2 text-center ">
                     <h1 className="mb-2 text-6xl font-bold tracking-tighter text-base-content lg:text-8xl md:text-7xl">
                         <span>{title} </span>
                     </h1>

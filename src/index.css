@@ -3,6 +3,7 @@
     themes: all;
   }
 
+@custom-variant dark (&:where([data-theme=abyss], [data-theme=abyss] *));
 .sample-slider .swiper-wrapper{
     transition-timing-function: linear;
 }
