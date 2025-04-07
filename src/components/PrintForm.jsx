@@ -190,7 +190,7 @@ const PrintForm = () => {
     setError('');
 
     try {
-      const response = await fetch('https://3dslicer-backend.vercel.app/calculate', {
+      const response = await fetch('78.81.146.106/calculate', {
         method: 'POST',
         body: formData,
       });
