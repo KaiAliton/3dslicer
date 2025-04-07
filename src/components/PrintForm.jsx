@@ -190,7 +190,7 @@ const PrintForm = () => {
     setError('');
 
     try {
-      const response = await fetch('78.81.146.106/calculate', {
+      const response = await fetch('http://78.81.146.106/calculate', {
         method: 'POST',
         body: formData,
       });
