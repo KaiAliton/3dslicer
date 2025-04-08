@@ -171,11 +171,41 @@ const PrintForm = () => {
   const [file, setFile] = useState(null);
   const [material, setMaterial] = useState('PLA');
   const [infill, setInfill] = useState(20);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [taskStatus, setTaskStatus] = useState('IDLE');
+  const [progress, setProgress] = useState(0);
+  const [orderEmail, setOrderEmail] = useState('');
+  const [orderTelegram, setOrderTelegram] = useState('');
+
+
+  const resetState = () => {
+    setFile(null);
+    setInfill(20);
+    setResults(null);
+    setError('');
+    setTaskId(null);
+    setTaskStatus('IDLE');
+    setProgress(0);
+    setOrderEmail('');
+    setOrderTelegram('');
+  };
+
+  const handleCloseMainModal = () => {
+    const confirmClose = window.confirm(
+      'Вы уверены, что хотите закрыть окно? Все поля, модель и запросы будут отменены.'
+    );
+    if (confirmClose) {
+      resetState();
+      (document.getElementById('my_modal_1')).close();
+    }
+  };
+
+  const openOrderModal = () => {
+    (document.getElementById('my_modal_2')).showModal();
+  };
 
   useEffect(() => {
     if (!taskId) return;
@@ -184,19 +214,26 @@ const PrintForm = () => {
       try {
         const response = await fetch(`https://kaialitest.ru/task/${taskId}`);
         const data = await response.json();
+        setProgress(data.progress)
 
 
-        if (data.status === 'success') {
+        if (data.status === 'SUCCESS') {
+          setProgress(100);
           clearInterval(interval);
-          setResults(data.result);
+          setTimeout(() => {
+            setResults(data.result);
+            setIsLoading(false);
+          }, 1000);
         }
-        if (data.status === 'failure') {
+        if (data.status === 'FAILURE') {
           clearInterval(interval);
           setError('Calculation failed');
+          setIsLoading(false);
         }
       } catch (err) {
         clearInterval(interval);
         setError('Connection error');
+        setIsLoading(false);
       }
     }, 5000);
 
@@ -251,7 +288,7 @@ const PrintForm = () => {
     formData.append('material', material);
     formData.append('infill', infill.toString());
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError('');
     setTaskStatus('PENDING');
 
@@ -260,24 +297,59 @@ const PrintForm = () => {
         method: 'POST',
         body: formData,
       });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Upload failed');
+      }
       const { task_id } = await response.json();
       setTaskId(task_id);
       setTaskStatus('PENDING');
+    }
+    catch (err) {
+      if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+        setError('Connection failed. Please check your internet and try again.');
+      } else {
+        setError(err.message || 'Unknown error occurred');
+      }
+    }
+    finally { }
+  };
+
+  const handleMakeOrder = async () => {
+    if (!file) return;
+    if (!taskId) {
+      alert('Невозможно оформить заказ: не найден идентификатор задачи');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('model', file);
+    formData.append('email', orderEmail);
+    formData.append('telegram', orderTelegram);
+    formData.append('task_id', taskId)
+
+    try {
+      const response = await fetch('https://kaialitest.ru/makeorder', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) throw new Error('Order submission failed');
+      alert('Order placed successfully!');
+      // Закрываем модальное окно заказа
+      (document.getElementById('my_modal_2')).close();
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
+      alert(err.message || 'Failed to place order');
     }
   };
+
 
   return (
     <div className="">
       {!results ? (
         <dialog id="my_modal_1" className="modal">
           <div className="max-w-md mx-auto p-8 text-base-content relative">
-            <form method="dialog">
+            <form method="dialog" className='modal-backdrop'>
               {/* if there is a button in form, it will close the modal */}
-              <button className="btn btn-ghost btn-md btn-circle absolute right-8">✕</button>
+              <button className="btn btn-ghost btn-md btn-circle absolute right-8" onClick={handleCloseMainModal}>✕</button>
             </form>
             <form onSubmit={handleSubmit} className=" bg-base-100 p-6 rounded-lg shadow-md">
               <h1 className="text-2xl font-bold mb-6">3D Print Calculator</h1>
@@ -324,11 +396,12 @@ const PrintForm = () => {
               </div>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isLoading}
                 className="w-full btn py-2 px-4 rounded-md  disabled:bg-gray-400"
               >
                 {taskStatus === 'PENDING' ? 'Calculating...' : 'Calculate'}
               </button>
+              {isLoading ? (progress == 0 ? <progress className="progress"></progress> : <progress className="progress transition-all duration-100" value={progress} max={100}></progress>) : <></>}
             </form>
           </div>
         </dialog>
@@ -339,10 +412,6 @@ const PrintForm = () => {
               <div className="relative w-full h-full hidden md:block">
                 <CanvasViewer file={file} />
               </div>
-              <form method="dialog">
-                {/* if there is a button in form, it will close the modal */}
-                <button className="btn btn-lg btn-circle absolute right-2 top-2">✕</button>
-              </form>
               <div className="md:absolute md:max-w-64 bg-base-100 left-4 top-4 p-4 shadow-md text-base-content">
 
                 <h2 className="text-xl font-bold mb-4">Print Details</h2>
@@ -357,11 +426,12 @@ const PrintForm = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="">Total Cost </span>
-                    <span className="font-medium"> {results.cost} rub.</span>
+                    <span className="font-medium"> {results.cost} usd.</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => alert('Order placed!')}
+                  type="button"
+                  onClick={openOrderModal}
                   className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
                 >
                   Place Order
@@ -369,8 +439,53 @@ const PrintForm = () => {
               </div>
             </div>
           </div>
+          <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
         </dialog>
       )}
+      <dialog id="my_modal_2" className="modal">
+        <div className="modal-box max-w-md mx-auto p-6">
+          <h2 className="text-xl font-bold mb-4">Order form</h2>
+          <p className="mb-4">
+            You will be noticed about your order in telegram or email soon.
+          </p>
+          <div className="mb-4">
+            <input
+              type="email"
+              placeholder="Email"
+              value={orderEmail}
+              onChange={(e) => setOrderEmail(e.target.value)}
+              className="input w-full mb-2"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Telegram"
+              value={orderTelegram}
+              onChange={(e) => setOrderTelegram(e.target.value)}
+              className="input w-full"
+              required
+            />
+          </div>
+          <div className="flex justify-between">
+            <button onClick={handleMakeOrder} className="btn btn-primary">
+              Place order
+            </button>
+            <button
+              onClick={() =>
+                (document.getElementById('my_modal_2')).close()
+              }
+              className="btn btn-ghost"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
   );
 };
