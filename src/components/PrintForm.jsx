@@ -195,7 +195,7 @@ const PrintForm = () => {
 
   const handleCloseMainModal = () => {
     const confirmClose = window.confirm(
-      'Вы уверены, что хотите закрыть окно? Все поля, модель и запросы будут отменены.'
+      'Are you really want to close this modal?'
     );
     if (confirmClose) {
       resetState();
@@ -318,7 +318,7 @@ const PrintForm = () => {
   const handleMakeOrder = async () => {
     if (!file) return;
     if (!taskId) {
-      alert('Невозможно оформить заказ: не найден идентификатор задачи');
+      alert('Error making order: taskId not founded');
       return;
     }
     const formData = new FormData();
