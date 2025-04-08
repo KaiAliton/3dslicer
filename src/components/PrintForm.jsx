@@ -336,6 +336,8 @@ const PrintForm = () => {
       alert('Order placed successfully!');
       // Закрываем модальное окно заказа
       (document.getElementById('my_modal_2')).close();
+      (document.getElementById('my_modal_1')).close();
+      resetState();
     } catch (err) {
       alert(err.message || 'Failed to place order');
     }
