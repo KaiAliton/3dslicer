@@ -230,6 +230,11 @@ const PrintForm = () => {
           setError('Calculation failed');
           setIsLoading(false);
         }
+        if (data.status === 'RETRY') {
+          clearInterval(interval);
+          setError('We cannot print this model');
+          setIsLoading(false);
+        }
       } catch (err) {
         clearInterval(interval);
         setError('Connection error');
@@ -351,7 +356,7 @@ const PrintForm = () => {
           <div className="max-w-md mx-auto p-8 text-base-content relative">
             <form method="dialog" className='modal-backdrop'>
               {/* if there is a button in form, it will close the modal */}
-              <button className="btn btn-ghost btn-md btn-circle absolute right-8" onClick={handleCloseMainModal}>✕</button>
+              <button className="btn btn-ghost text-base-content btn-md btn-circle absolute right-8" onClick={handleCloseMainModal}>✕</button>
             </form>
             <form onSubmit={handleSubmit} className=" bg-base-100 p-6 rounded-lg shadow-md">
               <h1 className="text-2xl font-bold mb-6">3D Print Calculator</h1>
